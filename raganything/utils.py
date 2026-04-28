@@ -25,14 +25,23 @@ def separate_content(
     text_parts = []
     multimodal_items = []
 
+    text_types = {"text", "list", "header", "footer", "page_number"}
+
     for item in content_list:
         content_type = item.get("type", "text")
 
-        if content_type == "text":
+        if content_type in text_types:
             # Text content
             text = item.get("text", "")
             if text.strip():
                 text_parts.append(text)
+        elif content_type == "list" and item.get("sub_type") == "text":
+            # Treat list of text items as text content
+            li = item.get("list_items", [])
+            if isinstance(li, list) and li:
+                joined = "\n".join([s.strip() for s in li if isinstance(s, str)])
+                if joined.strip():
+                    text_parts.append(joined)
         else:
             # Multimodal content (image, table, equation, etc.)
             multimodal_items.append(item)
